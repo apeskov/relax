@@ -7,23 +7,6 @@ from tvm.script import tir as T
 
 import tvm.tir.tensor_intrin.cuda
 
-def get_matmul(M, N, K):
-    @T.prim_func
-    def matmul(
-            A: T.Buffer((T.int64(M), T.int64(K)), "float16"),
-            B: T.Buffer((T.int64(K), T.int64(N)), "float16"),
-            C: T.Buffer((T.int64(M), T.int64(N)), "float16")
-    ):
-        T.func_attr({"global_symbol": "matmul", "tir.noalias": True})
-        for i, j, k in T.grid(T.int64(M), T.int64(N), T.int64(K)):
-            with T.block("matmul"):
-                vi, vj, vk = T.axis.remap("SSR", [i, j, k])
-                with T.init():
-                    C[vi, vj] = T.float16(0)
-                C[vi, vj] += A[vi, vk] * B[vk, vj]
-
-    return matmul
-
 
 def get_matmul_int4(M, N, K, G):
     assert K % 8 == 0,  "must be packable as a whole byte"
@@ -433,15 +416,15 @@ def main():
     configs = [
     #    M   N      K      G
         (32, 15360, 5120,  40),
-        (32, 5120,  5120,  40),
+        (16, 5120,  5120,  40),
         (32, 20480, 5120,  40),
         (32, 5120,  20480, 160),
     ]
-    target = Target("nvidia/nvidia-a100")
-    work_dir = "dolly_tune_all_4"
+    target = Target("nvidia/nvidia-a10g")
+    work_dir = "dolly_tune_all_X"
 
-    # ms_rule_type = "cuda"
-    ms_rule_type = "cuda-tensorcore"
+    ms_rule_type = "cuda"
+    # ms_rule_type = "cuda-tensorcore"
     
     funcs = {}
     for M, N, K, G in configs:
@@ -454,9 +437,10 @@ def main():
         target=target,
         work_dir=work_dir,
         max_trials_global=100500,
-        max_trials_per_task=512,
-        num_trials_per_iter=16,
-        space=ms.space_generator.PostOrderApply(                sch_rules=ms_rule_type,
+        max_trials_per_task=2048,
+        num_trials_per_iter=32,
+        space=ms.space_generator.PostOrderApply(
+                sch_rules=ms_rule_type,
                 postprocs=ms_rule_type,
                 mutator_probs=ms_rule_type,
             ),

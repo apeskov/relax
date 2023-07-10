@@ -11,17 +11,18 @@ from dolly_tune import get_matmul_int4_dyn_m, apply_trace_int_v1
 from dolly_bench import find_best_dyn_m
 from dolly_collection import get_static_mamtmul
 
+
 def main():
     configs = [
     #    M   N      K      G    Schedule/db_name
-        (32, 15360, 5120,  40,  "dolly_tune_all_4"),
-        (32, 5120,  5120,  40,  "dolly_tune_all_2"),
-        (32, 20480, 5120,  40,  "dolly_tune_all_3"),
+        (32, 15360, 5120,  40,  "dolly_tune_all_1"),
+        (32, 5120,  5120,  40,  "dolly_tune_all_1"),
+        (32, 20480, 5120,  40,  "dolly_tune_all_1"),
         (32, 5120,  20480, 160, "dolly_tune_all_1"),
     ]
     
     dev = tvm.cuda(0)
-    target = Target("nvidia/nvidia-a100")
+    target = Target("nvidia/nvidia-a10g")
     top_k_to_analize = 40
 
     funcs = {}
@@ -52,9 +53,10 @@ def main():
 
     # Compile
     mod_to_compile = tvm.IRModule(funcs)
+    print(mod_to_compile, file=open('impl_a10g_dynm.py', 'w'))
     with target:
         lib = tvm.build(mod_to_compile)
-        lib.export_library(f"int4_dolly_ker_tuned_v3.so")
+        lib.export_library(f"int4_dolly_ker_tuned_a10g.so")
 
 
 if __name__ == "__main__":
