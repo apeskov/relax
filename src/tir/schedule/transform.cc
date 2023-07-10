@@ -305,7 +305,9 @@ Optional<LoopRV> TileWithTensorIntrin(const tir::Schedule& sch, const tir::Block
   if (!opt_tensorize_info) return NullOpt;
   const tir::TensorizeInfoNode* info = opt_tensorize_info.value().get();
   if (info->block_iter_paddings.defined()) {
+    // std::cout << info->block_iter_paddings.value() << std::endl;
     sch->PadEinsum(block_rv, info->block_iter_paddings.value());
+    // sch->PadEinsum(block_rv, {Integer(16), Integer(16), Integer(16)});
   }
   // Construct a mapping from tir loops back to LoopRVs
   Map<tir::StmtSRef, LoopRV> loop2rv;
