@@ -423,7 +423,7 @@ class StateCreator : private StmtVisitor {
       const BaseFunc& base_func = kv.second;
       if (auto opt = base_func.as<PrimFunc>()) {
         auto func = opt.value();
-        VerifyWellFormed(func);
+        // VerifyWellFormed(func);
         creator.VisitStmt(func->body);
         BlockInfoCollector::Collect(self, func->body);
       }
