@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
+#include <limits>
 
 #include "../../support/str_escape.h"
 #include "../utils.h"
@@ -165,7 +166,12 @@ class JSONTokenizer {
     std::string to_parse(st, cur_);
     if (!is_float) {
       try {
-        *token = Token{TokenType::kInteger, IntImm(DataType::Int(64), std::stoll(to_parse))};
+        auto val = std::stoll(to_parse);
+        if (val > std::numeric_limits<int32_t>::max()) {
+          *token = Token{TokenType::kInteger, IntImm(DataType::Int(64), std::stoll(to_parse))};
+        } else {
+          *token = Token{TokenType::kInteger, IntImm(DataType::Int(32), std::stoll(to_parse))};
+        }
       } catch (const std::invalid_argument& e) {
         LOG(WARNING) << "ValueError: Invalid argument to std::stoll: " << to_parse
                      << ". Details: " << e.what() << ". Switching to std::stod now.";
