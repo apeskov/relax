@@ -214,8 +214,15 @@ Array<MeasureCandidate> AssembleCandidates(const std::vector<Schedule>& picks) {
   Array<MeasureCandidate> measure_inputs;
   measure_inputs.reserve(picks.size());
   for (const Schedule& sch : picks) {
-    measure_inputs.push_back(
-        MeasureCandidate(sch, ArgInfo::FromEntryFunc(sch->mod(), /*remove_preproc=*/true)));
+    Array<ArgInfo> arg_info;
+    auto func = tir::FindEntryFunc(sch->mod(), nullptr);
+    if (auto opt = func->attrs.GetAttr<Array<ObjectRef>>("metaschedule.arg_info_hint")) {
+      for (auto &json : opt.value())
+        arg_info.push_back(ArgInfo::FromJSON(json));
+    } else {
+      arg_info = ArgInfo::FromEntryFunc(sch->mod(), /*remove_preproc=*/true);
+    }
+    measure_inputs.push_back(MeasureCandidate(sch, arg_info));
   }
   return measure_inputs;
 }
