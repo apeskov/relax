@@ -8,11 +8,11 @@ from tvm import dlight as dl
 
 
 def roof_model(kind="ds"):
-    db_name = "__tmp/tune_sch_man_ds_64"
+    db_name = "__tmp/tune_sch_man_mds_64"
     func = matmul_g128_KN_sym_dynm
-    B, M, N, K = 1, 63, 22016, 4096
+    B, M, N, K = 1, 64, 22016, 4096
     BLK, GS = 8, 128
-    
+
     assert kind in ["ds", "dl"]
     if kind == "ds":
         db = ms.database.JSONDatabase(work_dir=db_name, allow_missing=False)
@@ -83,5 +83,5 @@ def correctness(db_name):
 
 
 if __name__ == "__main__":
-    roof_model(kind="ds")
-    # correctness(db_name="__tmp/tune_sch_man_ds_64")
+    # roof_model(kind="ds")
+    correctness(db_name="__tmp/tune_sch_man_ds_64")
