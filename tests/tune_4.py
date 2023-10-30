@@ -219,18 +219,9 @@ def mds3(m_pad = 32, decisions = {}):
 
 
 def main():
-    B, M, N, K, BLK, GS = 1, 63, 22016, 4096, 8, 128
     M = 64
-
-    args_info = [
-        ms.arg_info.TensorInfo("uint32", [K // BLK, N]),  # WGH
-        ms.arg_info.TensorInfo("float16", [K // GS, N]),  # SCL
-        ms.arg_info.TensorInfo("float16", [B, M, K]),     # D_IN
-        ms.arg_info.TensorInfo("float16", [B, M, N]),     # D_OUT
-    ]
-    args_info = [info.as_json() for info in  args_info]
     
-    func = matmul_g128_KN_sym_dynm.with_attr({"metaschedule.arg_info_hint": args_info})
+    func = matmul_g128_KN_sym_dynm.with_attr({"metaschedule.hint.dyn_var_value": {"m": M}})
     mod = IRModule({"matmul_g128_KN_sym_dynm": func})
 
     ms.tir_integration.tune_tir(

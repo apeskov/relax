@@ -3,20 +3,20 @@ import tvm
 from tvm.tir.schedule import Schedule, BlockRV
 from tvm import meta_schedule as ms
 
-from tune_com import matmul_g128_KN_sym_dynm, TARGET, make_arg
+from tune_com import TARGET, make_arg, matmul_g128_KN_sym_dynm, fused_fused_decode2_NT_matmul
 from tune_2 import mds1
 from tune_3 import mds2
 from tune_4 import mds3
 
 def main():
-  func = matmul_g128_KN_sym_dynm
+  func = fused_fused_decode2_NT_matmul
   B, M, N, K = 1, 64, 22016, 4096
   BLK, GS = 8, 128
 
   sch = Schedule(func, debug_mask="all")
   # mds3(m_pad=64)(sch)
-  mds2(m_pad=64)(sch)
-  # mds1(m_pad=64)(sch)
+  # mds2(m_pad=64)(sch)
+  mds1(m_pad=64)(sch)
   
   with TARGET:
     lib = tvm.build(sch.mod)

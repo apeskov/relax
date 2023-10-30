@@ -3,7 +3,7 @@ from tvm.tir.schedule import Schedule, BlockRV
 from tvm import meta_schedule as ms
 from tvm import IRModule
 
-from tune_com import matmul_g128_KN_sym_dynm, TARGET
+from tune_com import TARGET, matmul_g128_KN_sym_dynm, fused_fused_decode2_NT_matmul
 
 """
 MDS 1
@@ -149,18 +149,9 @@ def mds1(m_pad = 32, decisions = {}):
 
 
 def main():
-    B, M, N, K, BLK, GS = 1, 63, 22016, 4096, 8, 128
     M = 64
-
-    args_info = [
-        ms.arg_info.TensorInfo("uint32", [K // BLK, N]),  # WGH
-        ms.arg_info.TensorInfo("float16", [K // GS, N]),  # SCL
-        ms.arg_info.TensorInfo("float16", [B, M, K]),     # D_IN
-        ms.arg_info.TensorInfo("float16", [B, M, N]),     # D_OUT
-    ]
-    args_info = [info.as_json() for info in  args_info]
     
-    func = matmul_g128_KN_sym_dynm.with_attr({"metaschedule.arg_info_hint": args_info})
+    func = matmul_g128_KN_sym_dynm.with_attr({"metaschedule.hint.dyn_var_value": {"m": M}})
     mod = IRModule({"matmul_g128_KN_sym_dynm": func})
 
     ms.tir_integration.tune_tir(
